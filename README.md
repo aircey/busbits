@@ -47,5 +47,6 @@ Follow these steps to set up your development environment:
 Once the environment is set up, you can run the Busbits command-line tool with:
 
 ```bash
+cd samples
 busbits
 ```

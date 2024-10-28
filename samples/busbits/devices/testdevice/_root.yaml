@@ -1,0 +1,100 @@
+device:
+  name: "AXP192 Power Management IC"
+  description: "Power management IC with I2C interface used for battery-powered systems."
+
+  registers:
+    - name: "VOFF_SET"
+      address: 0x31
+      size: 1
+      access: "rw"
+      description: "Power-off voltage threshold configuration"
+      fields:
+        - name: "VOFF_THRESHOLD"
+          bit_offset: 0
+          bit_length: 8
+          #type: "range"
+          range:
+            #min: 260
+            #max: 410
+            offset: 260
+            step: 100
+            unit: "mV"
+
+    - name: "CHARGE_CURRENT"
+      address: 0x33
+      size: 1
+      access: "rw"
+      description: "Charge current setting"
+      fields:
+        - name: "CHARGE_CURRENT"
+          bit_offset: 0
+          bit_length: 4
+          #type: "values"
+          values:
+            "100mA": 0x0
+            "190mA": 0x1
+            "280mA": 0x2
+            "360mA": 0x3
+            "450mA": 0x4
+            "550mA": 0x5
+            "630mA": 0x6
+            "700mA": 0x7
+            "780mA": 0x8
+            "880mA": 0x9
+            "960mA": 0xA
+            "1000mA": 0xB
+            "1080mA": 0xC
+            "1160mA": 0xD
+            "1240mA": 0xE
+            "1320mA": 0xF
+
+    - name: "POWER_CONTROL"
+      address: 0x12
+      size: 1
+      access: "rw"
+      description: "Power control register"
+      fields:
+        - name: "CHARGER_ENABLE"
+          bit_offset: 7
+          bit_length: 1
+          #type: "boolean"
+          boolean:
+            false: 0
+            true: 1
+
+    - name: "TEMP_SENSOR"
+      address: 0x5E
+      size: 2                   # Register size is 2 bytes (16 bits)
+      access: "r"
+      description: "Temperature sensor data in 16-bit format"
+      fields:
+        - name: "TEMPERATURE"
+          bit_offset: 0         # Starts from the first bit of the register
+          bit_length: 16        # Spans 16 bits (2 bytes)
+          #type: "range"
+          range:
+            #min: -1280          # Minimum temperature in 0.1°C (e.g., -128.0°C)
+            #max: 1270           # Maximum temperature in 0.1°C (e.g., 127.0°C)
+            offset: -1280
+            step: 1             # Step in 0.1°C increments
+            unit: "0.1°C"
+
+  commands:
+    - name: "RESET"
+      command_code: 0x00
+      description: "Reset the device to default settings"
+      parameters: []   # No additional parameters
+
+    - name: "POWER_DOWN"
+      command_code: 0x01
+      description: "Initiate power-down sequence"
+      parameters:
+        - name: "DELAY"
+          description: "Delay in milliseconds before powering down"
+          #type: "range"
+          range:
+            #min: 0
+            #max: 255
+            offset: 0
+            step: 1
+            unit: "ms"
