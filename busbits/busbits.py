@@ -1,4 +1,6 @@
 import yaml
+
+from busbits.models import Device
 from .yaml_schemas.device import DEVICE_SCHEMA
 
 
@@ -15,9 +17,11 @@ def main():
     try:
         validated_data = parse_busbits_yaml(yaml_file_path)
         print("YAML parsed and validated successfully:")
-        print(validated_data)
     except Exception as e:
         print(f"Validation error: {e}")
+
+    device = Device.from_dict(validated_data["device"])
+    print(device)
 
 
 if __name__ == "__main__":
