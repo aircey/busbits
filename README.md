@@ -37,7 +37,7 @@ Follow these steps to set up your development environment:
    With the virtual environment activated, install the project dependencies:
 
    ```bash
-   pip install -e .
+   pip install -e ".[dev]"
    ```
 
    This will install the package in editable mode along with any dependencies listed in `requirements.txt`.

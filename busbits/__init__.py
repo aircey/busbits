@@ -1,1 +1,1 @@
-from .busbits import main
+from .busbits import main  # noqa: F401

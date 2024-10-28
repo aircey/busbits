@@ -6,10 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "busbits"
 version = "0.1.0"
 description = "Effortlessly generate libraries and documentation for I2C and SPI devices based on datasheet specifications"
-authors = [
-    { name = "Romain Colombo", email = "your.email@example.com" }
-]
+authors = [{ name = "Romain Colombo", email = "your.email@example.com" }]
 readme = "README.md"
+dynamic = ["dependencies", "optional-dependencies"]
 requires-python = ">=3.7"
 license = { text = "MIT" }
 keywords = ["i2c", "spi", "device", "register", "YAML"]
@@ -22,8 +21,8 @@ classifiers = [
 
 # Dynamic dependencies loading from external files
 [tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
-#optional-dependencies.dev = {file = ["requirements_dev.txt"]}
+dependencies = { file = ["requirements.txt"] }
+optional-dependencies.dev = { file = ["requirements_dev.txt"] }
 
 # Entry points for scripts
 [project.scripts]
