@@ -12,8 +12,9 @@ class WithSchema(metaclass=abc.ABCMeta):
     validated_props: Dict = {}
 
     def __init__(self, props: Dict) -> None:
-        self.validated_props = self.validate_schema(props)
-        for key in self.AUTO_PROPS:
+        cls = self.__class__
+        self.validated_props = cls.validate_schema(props)
+        for key in cls.AUTO_PROPS:
             if key not in self.validated_props:
                 raise ValueError(f"Missing required property: {key}")
             setattr(self, key, self.validated_props[key])
