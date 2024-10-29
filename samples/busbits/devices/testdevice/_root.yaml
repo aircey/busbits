@@ -11,11 +11,8 @@ registers:
       - name: "VOFF_THRESHOLD"
         bit_offset: 0
         bit_length: 8
-        #type: "range"
         values:
           range:
-            #min: 260
-            #max: 410
             offset: 260
             step: 100
             unit: "mV"
@@ -29,7 +26,6 @@ registers:
       - name: "CHARGE_CURRENT"
         bit_offset: 0
         bit_length: 4
-        #type: "values"
         values: 
           enum:
             "100mA": 0x0
@@ -58,7 +54,6 @@ registers:
       - name: "CHARGER_ENABLE"
         bit_offset: 7
         bit_length: 1
-        #type: "boolean"
         values:
           boolean:
             false: 0
@@ -73,12 +68,9 @@ registers:
       - name: "TEMPERATURE"
         bit_offset: 0         # Starts from the first bit of the register
         bit_length: 16        # Spans 16 bits (2 bytes)
-        #type: "range"
         values:
           range:
-            #min: -1280          # Minimum temperature in 0.1°C (e.g., -128.0°C)
-            #max: 1270           # Maximum temperature in 0.1°C (e.g., 127.0°C)
-            offset: -1280
+            offset: -1280  # Minimum temperature in 0.1°C (e.g., -128.0°C)
             step: 1             # Step in 0.1°C increments
             unit: "0.1°C"
 
@@ -94,11 +86,8 @@ commands:
     parameters:
       - name: "DELAY"
         description: "Delay in milliseconds before powering down"
-        #type: "range"
         values:
           range:
-            #min: 0
-            #max: 255
             offset: 0
             step: 1
             unit: "ms"
