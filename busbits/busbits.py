@@ -1,6 +1,6 @@
 import yaml
 
-from busbits.models import Device
+from busbits.models.device import Device
 
 
 def parse_busbits_yaml(file_path):
