@@ -19,6 +19,16 @@ class ValuesHolder(metaclass=abc.ABCMeta):
     def size(self) -> int:
         pass
 
+    @property
+    @abc.abstractmethod
+    def can_read(self) -> bool:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def can_write(self) -> bool:
+        pass
+
 
 class Range(WithSchema):
     values: "Values"
@@ -49,9 +59,6 @@ class Values(WithSchema):
     value_holder: ValuesHolder
 
     AUTO_PROPS = ["range", "enum", "boolean"]
-    range: Optional[Range]
-    enum: Optional[Dict[str, int]]
-    boolean: Optional[Dict[bool, int]]
 
     @classmethod
     def _build_schema(cls) -> vol.Schema:
@@ -74,13 +81,43 @@ class Values(WithSchema):
         return f"Values(range={self.range}, enum={self.enum}, boolean={self.boolean})"
 
 
+class BindingDefinition(WithSchema):
+    value_holder: ValuesHolder
+
+    AUTO_PROPS = ["domain", "dimension", "entity"]
+    domain: str
+    dimension: str
+    entity: str
+
+    @classmethod
+    def _build_schema(cls) -> vol.Schema:
+        return vol.Schema(
+            {
+                vol.Required("domain"): str,
+                vol.Required("dimension"): str,
+                vol.Required("entity"): str,
+            }
+        )
+
+    def __init__(self, props: Dict):
+        super().__init__(props)
+
+    def __repr__(self):
+        return (
+            f"BindingDefinition(domain={self.domain}, dimension={self.dimension}, "
+            f"entity={self.entity})"
+        )
+
+
 class Field(ValuesHolder, WithSchema):
     register: "Register"
 
-    AUTO_PROPS = ["name", "bit_offset", "bit_length", "values"]
+    AUTO_PROPS = ["name", "bit_offset", "bit_length", "access", "binding", "values"]
     name: str
     bit_offset: int
     bit_length: int
+    access: Access
+    binding: Optional[BindingDefinition]
     values: Values
 
     @classmethod
@@ -90,6 +127,10 @@ class Field(ValuesHolder, WithSchema):
                 vol.Required("name"): str,
                 vol.Required("bit_offset"): vol.All(int, vol.Range(min=0)),
                 vol.Required("bit_length"): vol.All(int, vol.Range(min=1)),
+                vol.Required("access"): vol.Coerce(Access),
+                vol.Optional(
+                    "binding", default=None
+                ): BindingDefinition.vol_may_coerce_nullable(),
                 vol.Optional("values", default={}): Values.vol_may_coerce(),
             }
         )
@@ -97,27 +138,38 @@ class Field(ValuesHolder, WithSchema):
     def __init__(self, props: Dict):
         super().__init__(props)
 
+        if self.binding is not None:
+            self.binding.value_holder = self
+
         self.values.value_holder = self
 
     @property
     def size(self) -> int:
         return self.bit_length
 
+    @property
+    def can_read(self) -> bool:
+        return self.access in [Access.READ, Access.READ_WRITE]
+
+    @property
+    def can_write(self) -> bool:
+        return self.access in [Access.WRITE, Access.READ_WRITE]
+
     def __repr__(self):
         return (
-            f"Field(name={self.name}, bit_offset={self.bit_offset},"
-            f"bit_length={self.bit_length}, values={self.values},)"
+            f"Field(name={self.name}, bit_offset={self.bit_offset}, "
+            f"bit_length={self.bit_length}, access={self.access}, "
+            f"binding={self.binding}, values={self.values})"
         )
 
 
 class Register(WithSchema):
     device: "Device"
 
-    AUTO_PROPS = ["name", "address", "size", "access", "description", "fields"]
+    AUTO_PROPS = ["name", "address", "size", "description", "fields"]
     name: str
     address: int
     size: int
-    access: Access
     description: str
     fields: List[Field]
 
@@ -128,7 +180,6 @@ class Register(WithSchema):
                 vol.Required("name"): str,
                 vol.Required("address"): int,
                 vol.Required("size"): vol.All(int, vol.Range(min=1)),
-                vol.Required("access"): vol.Coerce(Access),
                 vol.Required("description"): str,
                 vol.Optional("fields", default=[]): [Field.vol_may_coerce()],
             }
@@ -142,8 +193,8 @@ class Register(WithSchema):
 
     def __repr__(self):
         return (
-            f"Register(name={self.name}, address={hex(self.address)},"
-            f"size={self.size}, access={self.access}, description={self.description},"
+            f"Register(name={self.name}, address={hex(self.address)}, "
+            f"size={self.size}, description={self.description}, "
             f"fields={self.fields})"
         )
 
@@ -151,9 +202,10 @@ class Register(WithSchema):
 class CommandParameter(ValuesHolder, WithSchema):
     command: "Command"
 
-    AUTO_PROPS = ["name", "description", "values"]
+    AUTO_PROPS = ["name", "description", "access", "values"]
     name: str
     description: str
+    access: Access
     values: Values
 
     @classmethod
@@ -162,6 +214,7 @@ class CommandParameter(ValuesHolder, WithSchema):
             {
                 vol.Required("name"): str,
                 vol.Required("description"): str,
+                vol.Required("access"): vol.Coerce(Access),
                 vol.Optional("values", default={}): Values.vol_may_coerce(),
             }
         )
@@ -176,10 +229,18 @@ class CommandParameter(ValuesHolder, WithSchema):
         # TODO: Implement size calculation
         return 0
 
+    @property
+    def can_read(self) -> bool:
+        return self.access in [Access.READ, Access.READ_WRITE]
+
+    @property
+    def can_write(self) -> bool:
+        return self.access in [Access.WRITE, Access.READ_WRITE]
+
     def __repr__(self):
         return (
-            f"CommandParameter(name={self.name}, description={self.description},"
-            f"values={self.values})"
+            f"CommandParameter(name={self.name}, description={self.description}, "
+            f"access={self.access}, values={self.values})"
         )
 
 
@@ -213,7 +274,7 @@ class Command(WithSchema):
 
     def __repr__(self):
         return (
-            f"Command(name={self.name}, command_code={hex(self.command_code)},"
+            f"Command(name={self.name}, command_code={hex(self.command_code)}, "
             f"description={self.description}, parameters={self.parameters})"
         )
 
@@ -247,6 +308,6 @@ class Device(WithSchema):
 
     def __repr__(self):
         return (
-            f"Device(name={self.name}, description={self.description},"
+            f"Device(name={self.name}, description={self.description}, "
             f"registers={self.registers}, commands={self.commands})"
         )

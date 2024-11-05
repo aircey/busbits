@@ -1,7 +1,10 @@
-from typing import Optional, Dict
 import abc
+from typing import Dict, Optional
 
 import voluptuous as vol
+
+ROOT_DOMAIN = "_root"
+DOMAIN_ONLY_ENTITY = "_domain_only"
 
 
 class WithSchema(metaclass=abc.ABCMeta):

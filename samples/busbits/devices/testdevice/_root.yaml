@@ -5,12 +5,16 @@ registers:
   - name: "VOFF_SET"
     address: 0x31
     size: 1
-    access: "rw"
     description: "Power-off voltage threshold configuration"
     fields:
       - name: "VOFF_THRESHOLD"
         bit_offset: 0
         bit_length: 8
+        access: "rw"
+        binding:
+          domain: _root
+          dimension: voff_threshold
+          entity: _domain_only
         values:
           range:
             offset: 260
@@ -20,12 +24,16 @@ registers:
   - name: "CHARGE_CURRENT"
     address: 0x33
     size: 1
-    access: "rw"
     description: "Charge current setting"
     fields:
       - name: "CHARGE_CURRENT"
         bit_offset: 0
         bit_length: 4
+        access: "rw"
+        binding:
+          domain: supply
+          dimension: charge_current
+          entity: battery
         values: 
           enum:
             "100mA": 0x0
@@ -48,12 +56,16 @@ registers:
   - name: "POWER_CONTROL"
     address: 0x12
     size: 1
-    access: "rw"
     description: "Power control register"
     fields:
       - name: "CHARGER_ENABLE"
         bit_offset: 7
         bit_length: 1
+        access: "rw"
+        binding:
+          domain: supply
+          dimension: charge_enable
+          entity: battery
         values:
           boolean:
             false: 0
@@ -62,12 +74,16 @@ registers:
   - name: "TEMP_SENSOR"
     address: 0x5E
     size: 2                   # Register size is 2 bytes (16 bits)
-    access: "r"
     description: "Temperature sensor data in 16-bit format"
     fields:
       - name: "TEMPERATURE"
         bit_offset: 0         # Starts from the first bit of the register
         bit_length: 16        # Spans 16 bits (2 bytes)
+        access: "r"
+        binding:
+          domain: adc
+          dimension: value
+          entity: internal_temperature
         values:
           range:
             offset: -1280  # Minimum temperature in 0.1°C (e.g., -128.0°C)
@@ -86,6 +102,7 @@ commands:
     parameters:
       - name: "DELAY"
         description: "Delay in milliseconds before powering down"
+        access: "rw" # Relevant? Should be moved? 
         values:
           range:
             offset: 0
