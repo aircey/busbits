@@ -1,10 +1,11 @@
 import abc
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
-import voluptuous as vol
+from busbits.models import WithSchema, vol
 
-from busbits.models import WithSchema
+if TYPE_CHECKING:
+    from busbits.models.library import Library
 
 
 class Access(Enum):
@@ -280,6 +281,8 @@ class Command(WithSchema):
 
 
 class Device(WithSchema):
+    library: "Library"
+
     AUTO_PROPS = ["name", "description", "registers", "commands"]
     name: str
     description: str

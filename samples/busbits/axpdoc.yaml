@@ -1,0 +1,11 @@
+library:
+  name: AXP Doc
+  description: Auto-generated documentation of Axp192 using Busbits
+  slug: axpdoc
+  devices:
+    - slug: axp192
+      definition: !include ./devices/testdevice/_root.yaml
+  generators:
+    - engine: datasheet_md
+      options:
+        output: "generated_axpdoc.md"

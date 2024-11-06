@@ -1,26 +1,31 @@
-import yaml
+import pathlib
 
-from busbits.models.device import Device
+import yaml
+import yaml_include
+
 from busbits.models.library import DimensionScope, Library
+
+py_include = yaml_include.Constructor()
+yaml.add_constructor("!include", py_include)
 
 
 def parse_busbits_yaml(file_path):
+    py_include.base_dir = pathlib.Path(file_path).parent
     with open(file_path, "r") as file:
-        data = yaml.safe_load(file)
+        data = yaml.full_load(file)
 
-    return Device(data)
+    if "library" in data:
+        return Library(data["library"])
+    else:
+        raise Exception("Missing library definition")
 
 
 def main():
-    yaml_file_path = "./busbits/devices/testdevice/_root.yaml"
-    try:
-        device = parse_busbits_yaml(yaml_file_path)
-        print("YAML parsed and validated successfully:")
-        # print(device)
 
-        lib = Library("test")
-        lib.add_device("testdevice", device)
-        print(lib)
+    # return test()
+    yaml_file_path = "./busbits/axpdoc.yaml"
+    try:
+        lib = parse_busbits_yaml(yaml_file_path)
 
         for domain in lib.domains.values():
             for dimension in domain.dimensions.values():

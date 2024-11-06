@@ -1,2 +1,3 @@
 PyYAML==6.0.2
+pyyaml-include==2.1
 voluptuous==0.15.2

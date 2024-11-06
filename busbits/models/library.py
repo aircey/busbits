@@ -1,8 +1,9 @@
 from enum import Enum
-from typing import Dict
+from typing import Dict, List
 
-from busbits.models import DOMAIN_ONLY_ENTITY, ROOT_DOMAIN
+from busbits.models import DOMAIN_ONLY_ENTITY, ROOT_DOMAIN, WithSchema, vol
 from busbits.models.device import BindingDefinition, Device, Field
+from busbits.models.generator import BusbitsGenerator, generator_loader_schema
 
 
 class Action:
@@ -143,15 +144,40 @@ class Domain:
         )
 
 
-class Library:
+class Library(WithSchema):
+    AUTO_PROPS = ["name", "description", "slug", "generators"]
     name: str
+    description: str
+    generators: List[BusbitsGenerator]
+
     devices: Dict[str, Device]
     domains: Dict[str, Domain]
 
-    def __init__(self, name: str):
-        self.name = name
+    @classmethod
+    def _build_schema(cls) -> vol.Schema:
+        return vol.Schema(
+            {
+                vol.Required("name"): str,
+                vol.Required("description"): str,
+                vol.Required("slug"): str,
+                vol.Required("devices"): [
+                    {
+                        vol.Required("slug"): str,
+                        vol.Required("definition"): Device.vol_may_coerce(),
+                    }
+                ],
+                vol.Required("generators"): [generator_loader_schema],
+            }
+        )
+
+    def __init__(self, props: Dict):
+        super().__init__(props)
         self.devices = {}
         self.domains = {}
+
+        for device in self.validated_props["devices"]:
+            device["definition"].library = self
+            self.add_device(device["slug"], device["definition"])
 
     def add_device(self, device_slug: str, device: Device):
         if device_slug in self.devices:
@@ -176,4 +202,7 @@ class Library:
         return domain
 
     def __repr__(self):
-        return f"Library(name={self.name}, domains={self.domains})"
+        return (
+            f"Library(name={self.name}, devices={self.devices},"
+            f"domains={self.domains}, generators={self.generators})"
+        )
